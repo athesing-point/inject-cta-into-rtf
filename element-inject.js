@@ -18,6 +18,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var totalChildren = rtf.children.length;
     var targetIndex = Math.floor(totalChildren * 0.33); // Calculate 33% index
 
+    // Adjust targetIndex to avoid heading tags
+    while (targetIndex < totalChildren && /^H[1-6]$/.test(rtf.children[targetIndex].tagName)) {
+      targetIndex++;
+    }
+
     if (totalChildren > 0 && targetIndex < totalChildren) {
       // Insert after calculated index
       rtf.children[targetIndex].insertAdjacentElement("afterend", myElement);
