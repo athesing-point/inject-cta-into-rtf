@@ -15,22 +15,69 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Ensure the element and the RTF exist
   if (myElement && rtf) {
-    var totalChildren = rtf.children.length;
-    var targetIndex = Math.floor(totalChildren * 0.33); // Calculate 33% index
+    var children = Array.from(rtf.children);
+    var sections = [];
+    var currentSection = [];
 
-    // Adjust targetIndex to avoid heading tags
-    while (targetIndex < totalChildren && /^H[1-6]$/.test(rtf.children[targetIndex].tagName)) {
-      targetIndex++;
+    // Group elements into sections based on H2 tags
+    children.forEach((child) => {
+      if (child.tagName === "H2") {
+        if (currentSection.length > 0) {
+          sections.push(currentSection);
+        }
+        currentSection = [child];
+      } else {
+        currentSection.push(child);
+      }
+    });
+
+    if (currentSection.length > 0) {
+      sections.push(currentSection);
     }
 
-    if (totalChildren > 0 && targetIndex < totalChildren) {
-      // Insert after calculated index
-      rtf.children[targetIndex].insertAdjacentElement("afterend", myElement);
+    // Calculate the target section index (33% of the total sections)
+    var targetSectionIndex = Math.floor(sections.length * 0.33);
+
+    // Insert the element at the end of the target section
+    var targetSection = sections[targetSectionIndex];
+    var lastElementInSection = targetSection[targetSection.length - 1];
+
+    // Find the last non-figure element in the section
+    while (lastElementInSection && (lastElementInSection.tagName === "H2" || lastElementInSection.tagName === "FIGURE")) {
+      targetSection.pop();
+      lastElementInSection = targetSection[targetSection.length - 1];
+    }
+
+    // Insert the element after the last non-figure element
+    if (lastElementInSection) {
+      lastElementInSection.insertAdjacentElement("afterend", myElement);
     } else {
-      // If no children or targetIndex is out of bounds, append at the end
-      rtf.appendChild(myElement);
+      // If all elements are H2 or FIGURE, insert at the beginning of the next section
+      var nextSection = sections[targetSectionIndex + 1];
+      if (nextSection) {
+        // Find the first non-figure element in the next section
+        var firstNonFigureElement = nextSection.find((el) => el.tagName !== "FIGURE");
+        if (firstNonFigureElement) {
+          firstNonFigureElement.insertAdjacentElement("beforebegin", myElement);
+        } else {
+          // If all elements in the next section are figures, append to the end of the RTF
+          rtf.appendChild(myElement);
+        }
+      } else {
+        // If there is no next section, append to the end of the RTF
+        rtf.appendChild(myElement);
+      }
     }
-    console.log(`Appended 'injected-cta' after ${targetIndex} elements.`);
+
+    // Hide any adjacent figure elements
+    if (myElement.previousElementSibling && myElement.previousElementSibling.tagName === "FIGURE") {
+      myElement.previousElementSibling.style.display = "none";
+    }
+    if (myElement.nextElementSibling && myElement.nextElementSibling.tagName === "FIGURE") {
+      myElement.nextElementSibling.style.display = "none";
+    }
+
+    console.log(`Appended 'injected-cta' after section ${targetSectionIndex + 1}.`);
   } else {
     console.error("Either the rich text field or the element to be injected is missing.");
   }
