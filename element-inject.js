@@ -13,6 +13,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  // Check if the blog category contains "homeowner stories"
+  var blogCategoryElement = document.querySelector(".blog-category-text");
+  if (blogCategoryElement && blogCategoryElement.textContent.toLowerCase().includes("homeowner stories")) {
+    myElement.style.display = "none";
+    console.log("CTA hidden due to 'homeowner stories' category");
+    return;
+  }
+
   // Ensure the element and the RTF exist
   if (myElement && rtf) {
     var children = Array.from(rtf.children);
