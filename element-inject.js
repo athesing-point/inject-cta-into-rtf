@@ -24,68 +24,47 @@ document.addEventListener("DOMContentLoaded", function () {
   // Ensure the element and the RTF exist
   if (myElement && rtf) {
     var children = Array.from(rtf.children);
-    var sections = [];
-    var currentSection = [];
+    var midpoint = Math.floor(children.length / 2);
 
-    // Group elements into sections based on H2 tags
-    children.forEach((child) => {
-      if (child.tagName === "H2") {
-        if (currentSection.length > 0) {
-          sections.push(currentSection);
-        }
-        currentSection = [child];
-      } else {
-        currentSection.push(child);
-      }
-    });
+    // Create a wrapper for the CTA that resets styles
+    var ctaWrapper = document.createElement("div");
+    ctaWrapper.style.cssText = `
+      all: initial;
+      display: block;
+    `;
 
-    if (currentSection.length > 0) {
-      sections.push(currentSection);
+    // Move the CTA into the wrapper
+    ctaWrapper.appendChild(myElement);
+
+    // Apply styles to the submit button
+    var submitButton = myElement.querySelector('input[type="submit"]');
+    if (submitButton) {
+      submitButton.style.cssText = `
+        font-family: Circular;
+        font-size: inherit;
+      `;
     }
 
-    // Calculate the target section index (33% of the total sections)
-    var targetSectionIndex = Math.floor(sections.length * 0.33);
+    // Insert the wrapped CTA after the midpoint element
+    children[midpoint - 1].insertAdjacentElement("afterend", ctaWrapper);
 
-    // Insert the element at the end of the target section
-    var targetSection = sections[targetSectionIndex];
-    var lastElementInSection = targetSection[targetSection.length - 1];
+    // Check if the element before the CTA is a heading
+    var elementBeforeCTA = children[midpoint - 1];
+    if (elementBeforeCTA.tagName.match(/^H[1-6]$/)) {
+      // Move the heading below the CTA
+      ctaWrapper.insertAdjacentElement("afterend", elementBeforeCTA);
+      console.log("Moved heading below the CTA");
 
-    // Find the last non-figure element in the section
-    while (lastElementInSection && (lastElementInSection.tagName === "H2" || lastElementInSection.tagName === "FIGURE")) {
-      targetSection.pop();
-      lastElementInSection = targetSection[targetSection.length - 1];
-    }
-
-    // Insert the element after the last non-figure element
-    if (lastElementInSection) {
-      lastElementInSection.insertAdjacentElement("afterend", myElement);
-    } else {
-      // If all elements are H2 or FIGURE, insert at the beginning of the next section
-      var nextSection = sections[targetSectionIndex + 1];
-      if (nextSection) {
-        // Find the first non-figure element in the next section
-        var firstNonFigureElement = nextSection.find((el) => el.tagName !== "FIGURE");
-        if (firstNonFigureElement) {
-          firstNonFigureElement.insertAdjacentElement("beforebegin", myElement);
-        } else {
-          // If all elements in the next section are figures, append to the end of the RTF
-          rtf.appendChild(myElement);
-        }
-      } else {
-        // If there is no next section, append to the end of the RTF
-        rtf.appendChild(myElement);
+      // Find the last padding-small div inside the inline-cta-wrapper
+      var paddingDivs = myElement.querySelectorAll(".inline-cta-wrapper .padding-small");
+      if (paddingDivs.length > 0) {
+        var lastPaddingDiv = paddingDivs[paddingDivs.length - 1];
+        lastPaddingDiv.classList.add("hide");
+        console.log("Added 'hide' class to the last padding-small div");
       }
     }
 
-    // Hide any adjacent figure elements
-    if (myElement.previousElementSibling && myElement.previousElementSibling.tagName === "FIGURE") {
-      myElement.previousElementSibling.style.display = "none";
-    }
-    if (myElement.nextElementSibling && myElement.nextElementSibling.tagName === "FIGURE") {
-      myElement.nextElementSibling.style.display = "none";
-    }
-
-    console.log(`Appended 'injected-cta' after section ${targetSectionIndex + 1}.`);
+    console.log("Inserted 'injected-cta' in the middle of the rich text content.");
   } else {
     console.error("Either the rich text field or the element to be injected is missing.");
   }
