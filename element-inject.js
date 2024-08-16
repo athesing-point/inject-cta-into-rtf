@@ -33,21 +33,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Calculate the target index (25% of the content)
-    var targetIndex = Math.floor(children.length * 0.25);
-
-    // Find the H2 pair closest to the 25% mark, but not the first pair
     var insertIndex = -1;
+
+    // If we have H2 pairs, choose the last pair that's not the first pair
     if (h2Pairs.length > 1) {
-      insertIndex = h2Pairs.reduce((closest, current) => {
-        if (current === h2Pairs[0]) return closest; // Skip the first pair
-        return Math.abs(current - targetIndex) < Math.abs(closest - targetIndex) ? current : closest;
-      }, h2Pairs[1]); // Start with the second pair as the initial closest
+      insertIndex = h2Pairs[h2Pairs.length - 1];
     }
 
     // If no suitable H2 pair found, fall back to the 25% mark
     if (insertIndex === -1) {
-      insertIndex = targetIndex;
+      insertIndex = Math.floor(children.length * 0.25);
     }
 
     // Create a wrapper for the CTA that resets styles
