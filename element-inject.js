@@ -25,30 +25,37 @@ document.addEventListener("DOMContentLoaded", function () {
   if (myElement && rtf) {
     var children = Array.from(rtf.children);
 
-    // Find all pairs of adjacent H2 elements
+    // Find all pairs of adjacent H2 elements with content between them
     var h2Pairs = [];
     for (var i = 0; i < children.length - 1; i++) {
-      if (children[i].tagName === "H2" && children[i + 1].tagName === "H2") {
-        h2Pairs.push(i);
+      if (children[i].tagName === "H2") {
+        for (var j = i + 1; j < children.length; j++) {
+          if (children[j].tagName === "H2") {
+            // Check if there's substantial content between the H2s
+            if (j - i > 2) {
+              h2Pairs.push({ start: i, end: j });
+            }
+            break;
+          }
+        }
       }
     }
 
     var insertIndex = -1;
     var targetIndex = Math.floor(children.length * 0.33);
 
-    // Find the H2 pair closest to 33% of the content
-    if (h2Pairs.length > 0) {
-      insertIndex = h2Pairs.reduce((closest, current) => {
-        return Math.abs(current - targetIndex) < Math.abs(closest - targetIndex) ? current : closest;
-      });
+    // Find the H2 pair closest to 33% of the content, excluding the last pair
+    if (h2Pairs.length > 1) {
+      insertIndex = h2Pairs.slice(0, -1).reduce((closest, current) => {
+        var currentMidpoint = (current.start + current.end) / 2;
+        var closestMidpoint = (closest.start + closest.end) / 2;
+        return Math.abs(currentMidpoint - targetIndex) < Math.abs(closestMidpoint - targetIndex) ? current : closest;
+      }).end;
     }
 
-    // If no H2 pairs found, fall back to the 33% mark
+    // If no suitable H2 pairs found, fall back to the 33% mark
     if (insertIndex === -1) {
       insertIndex = targetIndex;
-    } else {
-      // Adjust insertIndex to be right before the second H2 of the pair
-      insertIndex++;
     }
 
     // Create a wrapper for the CTA that resets styles
@@ -56,6 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
     ctaWrapper.style.cssText = `
       all: initial;
       display: block;
+      margin-top: 2em;
+      margin-bottom: 2em;
     `;
 
     // Move the CTA into the wrapper
@@ -73,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Insert the wrapped CTA at the determined position
     children[insertIndex].insertAdjacentElement("beforebegin", ctaWrapper);
 
-    console.log("Inserted 'injected-cta' between H2 elements or at 33% mark.");
+    console.log("Inserted 'injected-cta' between H2 elements with content or at 33% mark.");
   } else {
     console.error("Either the rich text field or the element to be injected is missing.");
   }
