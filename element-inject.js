@@ -34,15 +34,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var insertIndex = -1;
+    var targetIndex = Math.floor(children.length * 0.33);
 
-    // If we have H2 pairs, choose the last pair that's not the first pair
-    if (h2Pairs.length > 1) {
-      insertIndex = h2Pairs[h2Pairs.length - 1];
+    // Find the H2 pair closest to 33% of the content
+    if (h2Pairs.length > 0) {
+      insertIndex = h2Pairs.reduce((closest, current) => {
+        return Math.abs(current - targetIndex) < Math.abs(closest - targetIndex) ? current : closest;
+      });
     }
 
-    // If no suitable H2 pair found, fall back to the 25% mark
+    // If no H2 pairs found, fall back to the 33% mark
     if (insertIndex === -1) {
-      insertIndex = Math.floor(children.length * 0.25);
+      insertIndex = targetIndex;
+    } else {
+      // Adjust insertIndex to be right before the second H2 of the pair
+      insertIndex++;
     }
 
     // Create a wrapper for the CTA that resets styles
@@ -65,25 +71,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Insert the wrapped CTA at the determined position
-    children[insertIndex].insertAdjacentElement("afterend", ctaWrapper);
+    children[insertIndex].insertAdjacentElement("beforebegin", ctaWrapper);
 
-    // Check if the element before the CTA is a heading
-    var elementBeforeCTA = children[insertIndex];
-    if (elementBeforeCTA.tagName.match(/^H[1-6]$/)) {
-      // Move the heading below the CTA
-      ctaWrapper.insertAdjacentElement("afterend", elementBeforeCTA);
-      console.log("Moved heading below the CTA");
-
-      // Find the last padding-small div inside the inline-cta-wrapper
-      var paddingDivs = myElement.querySelectorAll(".inline-cta-wrapper .padding-small");
-      if (paddingDivs.length > 0) {
-        var lastPaddingDiv = paddingDivs[paddingDivs.length - 1];
-        lastPaddingDiv.classList.add("hide");
-        console.log("Added 'hide' class to the last padding-small div");
-      }
-    }
-
-    console.log("Inserted 'injected-cta' between H2 elements or at 25% mark.");
+    console.log("Inserted 'injected-cta' between H2 elements or at 33% mark.");
   } else {
     console.error("Either the rich text field or the element to be injected is missing.");
   }
