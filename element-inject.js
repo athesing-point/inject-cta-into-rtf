@@ -24,7 +24,31 @@ document.addEventListener("DOMContentLoaded", function () {
   // Ensure the element and the RTF exist
   if (myElement && rtf) {
     var children = Array.from(rtf.children);
-    var midpoint = Math.floor(children.length / 2);
+
+    // Find all pairs of adjacent H2 elements
+    var h2Pairs = [];
+    for (var i = 0; i < children.length - 1; i++) {
+      if (children[i].tagName === "H2" && children[i + 1].tagName === "H2") {
+        h2Pairs.push(i);
+      }
+    }
+
+    // Calculate the target index (25% of the content)
+    var targetIndex = Math.floor(children.length * 0.25);
+
+    // Find the H2 pair closest to the 25% mark, but not the first pair
+    var insertIndex = -1;
+    if (h2Pairs.length > 1) {
+      insertIndex = h2Pairs.reduce((closest, current) => {
+        if (current === h2Pairs[0]) return closest; // Skip the first pair
+        return Math.abs(current - targetIndex) < Math.abs(closest - targetIndex) ? current : closest;
+      }, h2Pairs[1]); // Start with the second pair as the initial closest
+    }
+
+    // If no suitable H2 pair found, fall back to the 25% mark
+    if (insertIndex === -1) {
+      insertIndex = targetIndex;
+    }
 
     // Create a wrapper for the CTA that resets styles
     var ctaWrapper = document.createElement("div");
@@ -45,11 +69,11 @@ document.addEventListener("DOMContentLoaded", function () {
       `;
     }
 
-    // Insert the wrapped CTA after the midpoint element
-    children[midpoint - 1].insertAdjacentElement("afterend", ctaWrapper);
+    // Insert the wrapped CTA at the determined position
+    children[insertIndex].insertAdjacentElement("afterend", ctaWrapper);
 
     // Check if the element before the CTA is a heading
-    var elementBeforeCTA = children[midpoint - 1];
+    var elementBeforeCTA = children[insertIndex];
     if (elementBeforeCTA.tagName.match(/^H[1-6]$/)) {
       // Move the heading below the CTA
       ctaWrapper.insertAdjacentElement("afterend", elementBeforeCTA);
@@ -64,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    console.log("Inserted 'injected-cta' in the middle of the rich text content.");
+    console.log("Inserted 'injected-cta' between H2 elements or at 25% mark.");
   } else {
     console.error("Either the rich text field or the element to be injected is missing.");
   }
